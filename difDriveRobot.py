@@ -3,6 +3,8 @@ from math import sin, cos
 
 class DifDriveRobot:
 
+    #r: radius of each wheel
+    #l: space between the two wheels
     def __init__(self, r = 1, l = 1):
         self.r = r
         self.l = l
@@ -41,3 +43,8 @@ if __name__ == "__main__":
     v_r = 1
     result = myDrive.move(v_l, v_r, 0, 0, 0, 1)
     print(result)
+    print(result.tolist())
+    x = result[0, 0]
+    print(type(x))
+    print(y)
+    print(theta)
