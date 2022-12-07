@@ -1,12 +1,14 @@
 import pygame
 import math
+from math import sin, cos
 import difDriveRobot as robot
+from rayRectangleIntersection import *
 
 BLUE = (0, 0, 255)
 GREY = (100, 100, 100)
 
 def main():
-    global screen, robotImage
+    global screen, robotImage, myRobot, rectangles
 
     pygame.init()
     WIDTH = 1000
@@ -19,6 +21,8 @@ def main():
     myRobotWheelRadius = 4
     myRobot = robot.DifDriveRobot(r = myRobotWheelRadius, l = myRobotLength, )
     robotImage = pygame.image.load('robot.png')
+    rectangles = []
+    initRectangles()
 
     #robot position and wheel velocities
     x = 250
@@ -29,6 +33,7 @@ def main():
     #delta time in seconds
     dt = 0
     lasttime=pygame.time.get_ticks()
+
     #main loop
     while running:
         step = 2
@@ -60,10 +65,13 @@ def main():
         x = new_position[0, 0]
         y = new_position[1, 0]
         theta = new_position[2, 0]
-        print(theta)
+        print("theta={:f}".format(theta))
         #print(pygame.time.get_ticks())
 
+        drawRectangles()
+        #TODO why -theta here??
         drawRobot(myRobotLength, x, y, -theta)
+        emitRays(x, y, theta)
         pygame.display.update()
         
 
@@ -76,6 +84,38 @@ def drawRobot(length, x, y, theta):
     #some magic to ensure the center doesn't change when rotating
     new_rect = rotatedImage.get_rect(center = robotImage.get_rect(center = (x, y)).center)
     screen.blit(rotatedImage, new_rect)
+
+def initRectangles():
+    rectangles.append(Rectangle(100, 100, 200, 250))
+
+def drawRectangles():
+    color = (255,0,0)
+    # Drawing Rectangle
+    pygame.draw.rect(screen, color, pygame.Rect(30, 30, 60, 60))
+    pygame.display.flip()
+
+def emitRays(x, y, theta):
+    lineColor = (0, 255, 0)
+    lineColorIntersection = (0, 0, 255)
+    noIntersectionLineLength = 200
+    linearFunction = LinearFunction(x, y, theta)
+    for rect in rectangles:
+        (intersect, (x_intersection, y_intersection)) = findIntersection(linearFunction, rect)
+        if False:
+            print("intersect")
+            print((x_intersection, y_intersection))
+            pygame.draw.line(screen, lineColor, (x, y), (x_intersection, y_intersection))
+        else:
+            print("no intersect")
+            x_end = x + cos(theta) * noIntersectionLineLength
+            y_end = y + sin(theta) * noIntersectionLineLength
+            pygame.draw.line(screen, lineColor, (x, y), (x_end, y_end))
+
+
+
+    pygame.display.flip()
+
+
 
 if __name__ == '__main__':
     main()
