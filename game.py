@@ -1,4 +1,5 @@
 import pygame
+import math
 import difDriveRobot as robot
 
 BLUE = (0, 0, 255)
@@ -16,14 +17,14 @@ def main():
 
     myRobotLength = 20
     myRobotWheelRadius = 4
-    myRobot = robot.DifDriveRobot(l = myRobotLength, r = myRobotWheelRadius)
+    myRobot = robot.DifDriveRobot(r = myRobotWheelRadius, l = myRobotLength, )
     robotImage = pygame.image.load('robot.png')
 
     #robot position and wheel velocities
-    x = 100
-    y = 100
-    v_l = 50
-    v_r = 50
+    x = 250
+    y = 250
+    v_l = 0
+    v_r = 0
     theta = 0    
     #delta time in seconds
     dt = 0
@@ -43,20 +44,26 @@ def main():
                 v_r -= step
             if event.type == pygame.KEYDOWN and event.key==pygame.K_e:
                 v_r += step   
+            if event.type == pygame.KEYDOWN and event.key==pygame.K_SPACE:
+                v_r = 0
+                v_l = 0
+            
 
         print('v_l={:d}, v_r={:d}'.format(v_l, v_r))
 
         
         dt = (pygame.time.get_ticks() - lasttime) / 1000 #dt in seconds
         lasttime=pygame.time.get_ticks()
-        new_position = myRobot.move(v_l, v_r, x, y, theta, dt)
+        #really dirty hack to deal with different coordinate system of pygame
+        #swith v_l and v_r
+        new_position = myRobot.move(v_r, v_l, x, y, theta, dt)
         x = new_position[0, 0]
         y = new_position[1, 0]
         theta = new_position[2, 0]
         print(theta)
         #print(pygame.time.get_ticks())
 
-        drawRobot(myRobotLength, x, y, theta)
+        drawRobot(myRobotLength, x, y, -theta)
         pygame.display.update()
         
 
@@ -64,7 +71,8 @@ def drawRobot(length, x, y, theta):
     radius = length
     #pygame.draw.circle(screen, BLUE, (x, y), radius)
     screen.fill(GREY)
-    rotatedImage = pygame.transform.rotate(robotImage, -theta)
+    theta_deg = theta * 360 / (2 * math.pi) 
+    rotatedImage = pygame.transform.rotate(robotImage, theta_deg)
     #some magic to ensure the center doesn't change when rotating
     new_rect = rotatedImage.get_rect(center = robotImage.get_rect(center = (x, y)).center)
     screen.blit(rotatedImage, new_rect)

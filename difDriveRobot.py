@@ -38,13 +38,12 @@ class DifDriveRobot:
 
 
 if __name__ == "__main__":
-    myDrive = DifDriveRobot()
-    v_l = 1
-    v_r = 1
-    result = myDrive.move(v_l, v_r, 0, 0, 0, 1)
+    myDrive = DifDriveRobot(r=4, l=10)
+    v_l = 40
+    v_r = 10
+    x = 0
+    y = 0
+    theta = 0
+    delta_time = 3
+    result = myDrive.move(v_l, v_r, x, y, theta, delta_time)
     print(result)
-    print(result.tolist())
-    x = result[0, 0]
-    print(type(x))
-    print(y)
-    print(theta)
