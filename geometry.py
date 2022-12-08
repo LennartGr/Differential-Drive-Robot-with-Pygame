@@ -1,5 +1,6 @@
 import numpy as np
 import math
+from math import sin, cos
 
 class LineSegment:
 
@@ -17,6 +18,9 @@ class Ray:
         self.p = p
         self.d = d
 
+def RayFromPointAndAngle(p, theta):
+    return Ray(p, d = np.array([cos(theta), sin(theta)]))
+
 class Quadrangle:
     
     #corner points. Line segments are c1c2, c2c3, c3c4, c4d1
@@ -25,6 +29,14 @@ class Quadrangle:
         self.c2 = c2
         self.c3 = c3
         self.c4 = c4
+
+#construct special quadrangle, namely an axis-aligned rectangle
+def RectAsQuadrangle(x_min, x_max, y_min, y_max):
+    c1 = np.array([x_min, y_min])
+    c2 = np.array([x_min, y_max])
+    c3 = np.array([x_max, y_min])
+    c4 = np.array([x_max, y_max])
+    return Quadrangle(c1, c2, c3, c4)
 
 
 #Return (boolIntersection, intersectionPoint)

@@ -1,8 +1,9 @@
 import pygame
 import math
 from math import sin, cos
+import numpy as np
 import difDriveRobot as robot
-from rayRectangleIntersection import *
+import geometry as geo
 
 BLUE = (0, 0, 255)
 GREY = (100, 100, 100)
@@ -84,28 +85,32 @@ def drawRobot(length, x, y, theta):
     screen.blit(rotatedImage, new_rect)
 
 def initRectangles():
-    rectangles.append(Rectangle(100, 100, 200, 250))
+    rectangles.append(geo.RectAsQuadrangle(x_min = 100, x_max = 200, y_min = 100, y_max = 500))
 
 def drawRectangles():
     color = (255,0,0)
     # Drawing Rectangle
-    pygame.draw.rect(screen, color, pygame.Rect(30, 30, 60, 60))
+    for rectangle in rectangles:
+        x_top = rectangle.c1[0]
+        y_top = rectangle.c1[1]
+        width =  rectangle.c3[0] - rectangle.c1[0]
+        height = rectangle.c2[1] - rectangle.c1[1]
+        pygame.draw.rect(screen, color, pygame.Rect(x_top, y_top, width, height))
     pygame.display.flip()
+    
 
 def emitRays(x, y, theta):
     lineColor = (0, 255, 0)
     lineColorIntersection = (0, 0, 255)
     noIntersectionLineLength = 200
-    linearFunction = LinearFunction(x, y, theta)
-    for rect in rectangles:
-        (intersect, (x_intersection, y_intersection)) = findIntersection(linearFunction, rect)
+    ray = geo.RayFromPointAndAngle(np.array([x, y]), theta)
+    for rectangle in rectangles:
+        (intersect, (x_intersection, y_intersection)) = geo.calculateIntersectionRayQuadrangle(ray, rectangle)
         #TODO if intersect
-        if False:
-            print("intersect")
+        if intersect:
             print((x_intersection, y_intersection))
-            pygame.draw.line(screen, lineColor, (x, y), (x_intersection, y_intersection))
+            pygame.draw.line(screen, lineColorIntersection, (x, y), (x_intersection, y_intersection))
         else:
-            print("no intersect")
             x_end = x + cos(theta) * noIntersectionLineLength
             y_end = y + sin(theta) * noIntersectionLineLength
             pygame.draw.line(screen, lineColor, (x, y), (x_end, y_end))
