@@ -59,9 +59,7 @@ def main():
         
         dt = (pygame.time.get_ticks() - lasttime) / 1000 #dt in seconds
         lasttime=pygame.time.get_ticks()
-        #really dirty hack to deal with different coordinate system of pygame
-        #swith v_l and v_r
-        new_position = myRobot.move(v_r, v_l, x, y, theta, dt)
+        new_position = myRobot.move(v_l, v_r, x, y, theta, dt)
         x = new_position[0, 0]
         y = new_position[1, 0]
         theta = new_position[2, 0]
@@ -69,8 +67,7 @@ def main():
         #print(pygame.time.get_ticks())
 
         drawRectangles()
-        #TODO why -theta here??
-        drawRobot(myRobotLength, x, y, -theta)
+        drawRobot(myRobotLength, x, y, theta)
         emitRays(x, y, theta)
         pygame.display.update()
         
@@ -79,8 +76,9 @@ def drawRobot(length, x, y, theta):
     radius = length
     #pygame.draw.circle(screen, BLUE, (x, y), radius)
     screen.fill(GREY)
-    theta_deg = theta * 360 / (2 * math.pi) 
-    rotatedImage = pygame.transform.rotate(robotImage, theta_deg)
+    theta_deg = theta * 360 / (2 * math.pi)
+    #we want to rotate clockwise, so use -theta_deg
+    rotatedImage = pygame.transform.rotate(robotImage, -theta_deg)
     #some magic to ensure the center doesn't change when rotating
     new_rect = rotatedImage.get_rect(center = robotImage.get_rect(center = (x, y)).center)
     screen.blit(rotatedImage, new_rect)
@@ -101,6 +99,7 @@ def emitRays(x, y, theta):
     linearFunction = LinearFunction(x, y, theta)
     for rect in rectangles:
         (intersect, (x_intersection, y_intersection)) = findIntersection(linearFunction, rect)
+        #TODO if intersect
         if False:
             print("intersect")
             print((x_intersection, y_intersection))

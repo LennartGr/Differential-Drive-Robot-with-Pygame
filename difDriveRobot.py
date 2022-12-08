@@ -12,7 +12,7 @@ class DifDriveRobot:
     #v_l and v_r: left and right wheel velocities in pixel per second
     #start = (x, y) start coordinates
     #return: [x_prime, y_prime, phi_prime] as column vector (numpy matrix)
-    def move(self, v_l, v_r, x, y, theta, delta_time):
+    def moveClassical(self, v_l, v_r, x, y, theta, delta_time):
         epsilon = 0.05
         #case 1: approximately same wheel speed. 
         #Treat this case seperately to avoid division by zero
@@ -36,14 +36,8 @@ class DifDriveRobot:
         b = np.mat([[ICC_x], [ICC_y], [tmp]])
         return rotation_matrix * a + b
 
-
-if __name__ == "__main__":
-    myDrive = DifDriveRobot(r=4, l=10)
-    v_l = 40
-    v_r = 10
-    x = 0
-    y = 0
-    theta = 0
-    delta_time = 3
-    result = myDrive.move(v_l, v_r, x, y, theta, delta_time)
-    print(result)
+    #for pygame type coordinate system where origin is top left corner
+    def move(self, v_l, v_r, x, y, theta, delta_time):
+        #the pygmame type coordinate system means mirroring the original one by the x-axis,
+        #so we can simply switch v_l and v_r
+        return self.moveClassical(v_r, v_l, x, y, theta, delta_time)
