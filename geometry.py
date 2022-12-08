@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class LineSegment:
 
@@ -16,9 +17,19 @@ class Ray:
         self.p = p
         self.d = d
 
+class Quadrangle:
+    
+    #corner points. Line segments are c1c2, c2c3, c3c4, c4d1
+    def __init__(self, c1, c2, c3, c4):
+        self.c1 = c1
+        self.c2 = c2
+        self.c3 = c3
+        self.c4 = c4
+
+
 #Return (boolIntersection, intersectionPoint)
 #if there are multiple intersection points, return the closest one in terms of the ray's parameter p
-def calculateIntersection(ray, lineSegment):
+def calculateIntersectionRayLineSegment(ray, lineSegment):
     d_prime = np.array([-ray.d[1], ray.d[0]])
     denominator = np.dot(d_prime, lineSegment.b - lineSegment.a)
     #treat special case first: denominator close to zero
@@ -49,5 +60,30 @@ def calculateIntersection(ray, lineSegment):
         return (True, intersectionPoint)
     else:
         return (False, np.array([0, 0]))
+
+def calculateIntersectionRayQuadrangle(ray, quadrangle):
+    #build all line segments of rectangle and calc intersection
+    l1 = LineSegment(quadrangle.c1, quadrangle.c2)
+    l2 = LineSegment(quadrangle.c2, quadrangle.c3)
+    l3 = LineSegment(quadrangle.c3, quadrangle.c4)
+    l4 = LineSegment(quadrangle.c4, quadrangle.c1)
+    lineSegmentList = [l1, l2, l3, l4]
+    intersection = False
+    intersectionPoint = np.array([0, 0])
+    for lineSegment in lineSegmentList:
+        (segmentIntersects, segmentIntersectionPoint) = calculateIntersectionRayLineSegment(ray, lineSegment)
+        if segmentIntersects:
+            #is this the first intersection we found?
+            if intersection == False:
+                intersection = True
+                intersectionPoint = segmentIntersectionPoint
+            #if this is not the first intersection we found, is it better then the previous ones (i.e. closer)?
+            elif np.linalg.norm(ray.p - segmentIntersectionPoint) < np.linalg.norm(ray.p - intersectionPoint):
+                intersectionPoint = segmentIntersectionPoint
+    return (intersection, intersectionPoint)
+
+
+            
+
     
 
