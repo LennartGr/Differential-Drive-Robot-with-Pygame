@@ -1,17 +1,20 @@
 import numpy as np
 from math import sin, cos
 
+# this class implements the kinematics of a dif drive robot
 class DifDriveRobot:
 
-    #r: radius of each wheel
-    #l: space between the two wheels
+    # r: radius of each wheel
+    # l: space between the two wheels
     def __init__(self, r = 1, l = 1):
         self.r = r
         self.l = l
 
-    #v_l and v_r: left and right wheel velocities in pixel per second
-    #start = (x, y) start coordinates
-    #return: [x_prime, y_prime, phi_prime] as column vector (numpy matrix)
+    # v_l and v_r: left and right wheel velocities in pixel per second
+    # (x, y) start coordinates
+    # theta: angle in rad with respect to x-axis
+    # delta_time: time duration in sec the movement shall be executed for
+    # return: [x_prime, y_prime, theta_prime] the new position and angle as a column vector (numpy matrix)
     def moveClassical(self, v_l, v_r, x, y, theta, delta_time):
         epsilon = 0.05
         #case 1: approximately same wheel speed. 
