@@ -1,6 +1,6 @@
 import threading
 import time
-import pygame
+from datetime import datetime
 
 # state holder for the robot
 # also knows robots movement and control parameters
@@ -22,14 +22,13 @@ class Algorithm(threading.Thread):
 
 
     def run(self):
-        pygame.init()
         dt = 0
-        lasttime = pygame.time.get_ticks()
+        lasttime = datetime.now()
         sign = 1
         while(self.running):
             # time difference to last action
-            dt = (pygame.time.get_ticks() - lasttime) / 1000 
-            lasttime = pygame.time.get_ticks()
+            dt = (datetime.now() - lasttime).total_seconds()
+            lasttime = datetime.now()
             # modify state of robot respectively to passed time and the environment
             # if close to obstacle, go to the other direction
             if self.environment.getDistanceToObstacle(self.robot.x) < 1:
