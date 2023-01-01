@@ -70,9 +70,3 @@ myGui = GUI(myRobot, myEnv)
 # call start, not run
 myAlgorithm.start()
 myGui.display()
-"""
-myAlgorithm.test()
-myGui.test()
-print(myRobot.x)
-"""
-
