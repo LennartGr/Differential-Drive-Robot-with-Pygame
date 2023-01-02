@@ -33,11 +33,13 @@ class GUI:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
-                    print("Stop GUI")
-            shortestDistance = self.drawSensorRay()
+                    print("Stop GUI")          
             self.drawRobot()
             self.drawEnvironment()
+            shortestDistance = self.drawSensorRay()
             self.updateCaption(shortestDistance)
+            # important to call this only once per inner loop, otherwise there is flickering
+            pygame.display.flip()
     
     def updateCaption(self, shortestDistance):
         caption = "Differential Drive Robot Simulation:    "
@@ -72,7 +74,6 @@ class GUI:
             width =  rectangle.c3[0] - rectangle.c1[0]
             height = rectangle.c2[1] - rectangle.c1[1]
             pygame.draw.rect(self.screen, RECT_COLOR, pygame.Rect(x_top, y_top, width, height))
-        pygame.display.flip()
         
     # makes the robot emit a ray in gaze direction.
     # returns the closest distance to an obstacle
@@ -86,6 +87,4 @@ class GUI:
             x_end = self.robot.x + cos(self.robot.theta) * NO_INTERSECTION_RAY_LENGTH
             y_end = self.robot.y + sin(self.robot.theta) * NO_INTERSECTION_RAY_LENGTH
             pygame.draw.line(self.screen, RAY_COLOR, (self.robot.x, self.robot.y), (x_end, y_end))
-        # update display
-        pygame.display.flip()
         return shortestDistance
