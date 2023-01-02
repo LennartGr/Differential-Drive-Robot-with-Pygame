@@ -14,13 +14,16 @@ NO_INTERSECTION_RAY_LENGTH = 200
 # displays the robot and the environment
 class GUI:
 
-    WIDTH = 1000
-    HEIGHT = 750
+    # width and height are determined by the environment
+    WIDTH = 0
+    HEIGHT = 0
     ROBOT_IMAGE = pygame.image.load('robot.png')
 
     def __init__(self, robot, environment):
         self.robot = robot
         self.environment = environment
+        self.WIDTH = environment.WIDTH
+        self.HEIGHT = environment.HEIGHT
         self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
 
     def display(self):

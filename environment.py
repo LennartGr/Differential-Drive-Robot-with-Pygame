@@ -6,9 +6,17 @@ import numpy as np
 # doesn't need to know any other component
 class Environment:
 
+    WIDTH = 1200
+    HEIGHT = 500
+    WALL_SIZE = 20
+    # constants of the door. (x, y) is top left corner of emptiness
+    DOOR_X = 1000
+    DOOR_Y = 150
+    DOOR_WIDTH = 100
+
     def __init__(self):
         self.rectangles = []
-        self.initRectangles()
+        self.initSimpleMap()
 
     # calculates the distance to the closest obstacle from the position (x,y)
     # with gaze direction indicated by the angle theta
@@ -39,3 +47,17 @@ class Environment:
         # Use this line as reference on how to create rectangles
         self.rectangles.append(geo.RectAsQuadrangle(x_min = 100, x_max = 200, y_min = 100, y_max = 500))
         self.rectangles.append(geo.RectAsQuadrangle(600, 650, 100, 500))
+
+    def initSimpleMap(self):
+        # right
+        self.rectangles.append(geo.RectAsQuadrangle(0, self.WALL_SIZE, 0, self.HEIGHT))
+        # top
+        self.rectangles.append(geo.RectAsQuadrangle(0, self.WIDTH, 0, self.WALL_SIZE))
+        # left
+        self.rectangles.append(geo.RectAsQuadrangle(self.WIDTH - self.WALL_SIZE, self.WIDTH, 0, self.HEIGHT))
+        # bottom
+        self.rectangles.append(geo.RectAsQuadrangle(0, self.WIDTH, self.HEIGHT - self.WALL_SIZE, self.HEIGHT))
+        # door, always on the right. upper part
+        self.rectangles.append(geo.RectAsQuadrangle(self.DOOR_X, self.DOOR_X + self.WALL_SIZE, 0, self.DOOR_Y))
+        # door, lower part
+        self.rectangles.append(geo.RectAsQuadrangle(self.DOOR_X, self.DOOR_X + self.WALL_SIZE, self.DOOR_Y + self.DOOR_WIDTH, self.HEIGHT))
