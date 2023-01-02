@@ -1,8 +1,27 @@
 import numpy as np
 from math import sin, cos
 
-# this class implements the kinematics of a dif drive robot
+# kinematics plus state for x, y, theta and robot radius
+# radius is just for display purposes, assuming a round robot
 class DifDriveRobot:
+
+    def __init__(self, r = 1, l = 1, x = 100, y = 100, theta = 0, robotRadius = 20) -> None:
+        self.kinematics = DifDriveRobotKinematics(r, l)
+        self.x = x
+        self.y = y
+        self.theta = theta
+        self.robotRadius = robotRadius
+
+    def move(self, v_l, v_r, delta_time):        
+        new_position = self.kinematics.move(v_r, v_l, self.x, self.y, self.theta, delta_time)
+        self.x = new_position[0, 0]
+        self.y = new_position[1, 0]
+        self.theta = new_position[2, 0]
+        return new_position
+
+    
+# this class implements the kinematics of a dif drive robot
+class DifDriveRobotKinematics:
 
     # r: radius of each wheel
     # l: space between the two wheels
