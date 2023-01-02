@@ -8,6 +8,14 @@ import math
 from math import sin, cos, tan
 
 UPDATES_PER_SECOND = 20
+# how many measurements are taken with a single rotation
+ROTATION_STEPS = 360
+# how many seconds shall one rotation take (for display reasons)
+ROTATION_TIME = 3
+
+# fetched from environment
+BOARD_WIDTH = 0
+BOARD_HEIGHT = 0
 
 # class inherits from Thread
 # knows the environment and changes the robot's control parameters following some strategy
@@ -19,11 +27,13 @@ class Algorithm(threading.Thread):
         self.running = True
         self.robot = robot
         self.environment = environment
-
+        BOARD_WIDTH = self.environment.WIDTH - 2 * self.environment.WALL_SIZE
+        BOARD_HEIGHT = self.environment.HEIGHT - 2 * self.environment.WALL_SIZE
 
     def run(self):
-        self.manualControlAlgorithm()
+        self.scannerAlgorithmSimple()
 
+    # very simple algorithm for testing
     def backAndForthAlgorithm(self):
         vel = 5
         dt = 0
@@ -96,6 +106,55 @@ class Algorithm(threading.Thread):
                 lasttime = datetime.now()
                 self.robotMoveForward(1)
 
+    # search for the middle of the door by determining the two spots where the measured distance suddenly increases / drops significantly
+    # go some distance in the direction of that spot
+    def scannerAlgorithmSimple(self):
+        epsilon = 10
+        cutoffDelta = 170
+        forwardAfterRotation = 300 # shall be a whole number
+        dt = 0
+        lasttime = datetime.now()
+        while(self.running):
+            # time difference to last action
+            dt = (datetime.now() - lasttime).total_seconds()
+            lasttime = datetime.now()
+            measurements = self.robotFullRotationMeasuring()
+            # search measurements for the two closest points on each horizontal wall
+            # distance roughly BOARD_HEIGHT to each other
+            # search for four non-monotone spots
+            monotoneIndices = []
+            monotoneValues = []
+            dropIndex = -1
+            increaseIndex = -1
+            for i in range(ROTATION_STEPS):
+                if measurements[i - 1] < measurements[i] and measurements[i] < measurements[(i + 1) % len(measurements)]:
+                    monotoneIndices.append(i)
+                if measurements[i - 1] + cutoffDelta < measurements[i]:
+                    dropIndex = i
+                elif measurements[i] > measurements[(i + 1) % len(measurements)] + cutoffDelta:
+                    increaseIndex = i
+            # find index of angle corresponding to door
+            if dropIndex < increaseIndex:
+                doorIndex = round(0.5 * (increaseIndex + dropIndex))
+            else:
+                doorIndex = round((0.5 * (dropIndex + increaseIndex + len(measurements))) % len(measurements))
+            print("drop index   door index   increaseIndex", (dropIndex, doorIndex, increaseIndex))
+            # rotate to the spot where we assume the middle of the door to be
+            time.sleep(1)
+            # self.robotPartialRotation(doorIndex)
+            self.robotTurn(2 * math.pi * (doorIndex / ROTATION_STEPS))
+
+            # go forward some distance
+            distanceToGo = forwardAfterRotation
+            while distanceToGo > 0:
+                self.robotMoveForward(1)
+                time.sleep(0.01)
+                distanceToGo -= 1
+            
+
+
+
+
     # assuming we have solved inverse kinematics, we can tell the robot to drive forward and to turn some angle directly
 
     def robotMoveForward(self, distance):
@@ -111,3 +170,24 @@ class Algorithm(threading.Thread):
 
     def robotTurnLeft(self):
         self.robotTurn(- (math.pi / 2))
+
+    def robotFullRotationMeasuring(self):
+        measurements = []
+        for i in range(ROTATION_STEPS):
+            measurements.append(self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta))
+            self.robotTurn(2 * math.pi / ROTATION_STEPS)
+            time.sleep(ROTATION_TIME / ROTATION_STEPS)
+        return measurements
+
+    # make a partial rotation without taking measurements
+    def robotPartialRotation(self, steps):
+        if steps < ROTATION_STEPS / 2:
+            for i in range(steps):
+                self.robotTurn(2 * math.pi / ROTATION_STEPS)
+                time.sleep(ROTATION_TIME / ROTATION_STEPS)
+        else:
+            # more efficient to rotate in the other direction
+            for i in range(ROTATION_STEPS - steps):
+                self.robotTurn(2 * math.pi / ROTATION_STEPS)
+                time.sleep(ROTATION_TIME / ROTATION_STEPS)
+

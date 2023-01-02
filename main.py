@@ -11,7 +11,7 @@ ROBOT_RADIUS = 20
 # create robot, start algorithm and init GUI
 
 # TODO later: spawn robot at random spot on the map
-myRobot = difDriveRobot.DifDriveRobot(r = ROBOT_WHEEL_RADIUS, l = 20, x = 250, y = 250, theta = 0)
+myRobot = difDriveRobot.DifDriveRobot(r = ROBOT_WHEEL_RADIUS, l = 20, x = 100, y = 100, theta = 0)
 myEnv = environment.Environment()
 myAlgorithm = algorithm.Algorithm(myRobot, myEnv)
 myGui = gui.GUI(myRobot, myEnv)
