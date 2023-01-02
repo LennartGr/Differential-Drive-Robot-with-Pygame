@@ -13,7 +13,7 @@ class DifDriveRobot:
         self.robotRadius = robotRadius
 
     def move(self, v_l, v_r, delta_time):        
-        new_position = self.kinematics.move(v_r, v_l, self.x, self.y, self.theta, delta_time)
+        new_position = self.kinematics.move(v_l, v_r, self.x, self.y, self.theta, delta_time)
         self.x = new_position[0, 0]
         self.y = new_position[1, 0]
         self.theta = new_position[2, 0]
