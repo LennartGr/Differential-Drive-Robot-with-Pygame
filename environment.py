@@ -38,4 +38,4 @@ class Environment:
     def initRectangles(self):
         # Use this line as reference on how to create rectangles
         self.rectangles.append(geo.RectAsQuadrangle(x_min = 100, x_max = 200, y_min = 100, y_max = 500))
-        self.rectangles.append(geo.RectAsQuadrangle(300, 350, 100, 500))
+        self.rectangles.append(geo.RectAsQuadrangle(600, 650, 100, 500))
