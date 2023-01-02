@@ -20,7 +20,7 @@ def main():
 
     myRobotLength = 20
     myRobotWheelRadius = 4
-    myRobot = robot.DifDriveRobot(r = myRobotWheelRadius, l = myRobotLength, )
+    myRobot = robot.DifDriveRobot(r = myRobotWheelRadius, l = myRobotLength)
     robotImage = pygame.image.load('robot.png')
     rectangles = []
     initRectangles()

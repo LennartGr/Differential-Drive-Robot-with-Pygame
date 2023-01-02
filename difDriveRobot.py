@@ -1,7 +1,7 @@
 import numpy as np
 from math import sin, cos
 
-# kinematics plus state for x, y, theta and robot radius
+# kinematics plus state for x, y, theta (in rad) and robot radius
 # radius is just for display purposes, assuming a round robot
 class DifDriveRobot:
 
