@@ -4,6 +4,7 @@ import pygame
 from datetime import datetime
 import difDriveRobot as robot
 import environment
+import arrayUtils
 import math
 from math import sin, cos, tan
 
@@ -14,8 +15,8 @@ ROTATION_STEPS = 360
 ROTATION_TIME = 3
 
 # fetched from environment
-BOARD_WIDTH = 0
-BOARD_HEIGHT = 0
+BOARD_WIDTH = environment.Environment.WIDTH - 2 * environment.Environment.WALL_SIZE
+BOARD_HEIGHT = environment.Environment.HEIGHT - 2 * environment.Environment.WALL_SIZE
 
 # class inherits from Thread
 # knows the environment and changes the robot's control parameters following some strategy
@@ -27,8 +28,6 @@ class Algorithm(threading.Thread):
         self.running = True
         self.robot = robot
         self.environment = environment
-        BOARD_WIDTH = self.environment.WIDTH - 2 * self.environment.WALL_SIZE
-        BOARD_HEIGHT = self.environment.HEIGHT - 2 * self.environment.WALL_SIZE
 
     def run(self):
         self.scannerAlgorithm()
@@ -44,18 +43,14 @@ class Algorithm(threading.Thread):
             lasttime = datetime.now()
             measurements = self.robotFullRotationMeasuring()
             (doorDetected, indexDoorMiddle) = self.detectDoor(measurements)
-            if doorDetected:
+            if False and doorDetected:
                 # make the robot look to the supposed center of the door
                 self.robotPartialRotation(indexDoorMiddle)
                 self.robotMoveForwardAnimated(D_DOOR)
-            elif self.isOnCenterLine(measurements):
-                pass
             else:
-                (centerLineDetected, indexCenterLine, distance) = self.detectCenterLine(measurements)
-                if centerLineDetected:
-                    pass
-                else: # random action
-                    self.behaveRandomly(measurements)
+                centerLineFound = self.searchCenterLineAndMove(measurements)
+                if not centerLineFound:
+                    self.robotMoveRandomly(measurements)
                         
     def detectDoor(self, measurements):   
         CUTOFF_DELTA = 150
@@ -81,9 +76,65 @@ class Algorithm(threading.Thread):
         print("drop index   door index   increaseIndex", (dropIndex, indexDoorMiddle, increaseIndex))
         return (doorDetected, indexDoorMiddle)
 
-    def isOnCenterLine(self, measurements):
-        epsilon = 10
-        return False
+    # searches the center line by analyzing the measurements.
+    # if robot already on sensor line: follow it
+    # else try to navigate robot in the direction of center line
+    # return false if no clue where center line is, in that case robot was not moved
+    # else return true
+    # TODO on center line but wall ahead
+    def searchCenterLineAndMove(self, measurements):
+        OPPOSITE_TOLERANCE = 2
+        WALL_DISTANCE_EPSILON = 40
+        ALREADY_MIDDLE_LINE_EPSILON = 100
+        D_ML_FOLLOWING = 100
+        D_ML_APPROACHING = 50
+        closeDistanceIndices = []
+        closeDistanceValues = []
+
+        for i in range(ROTATION_STEPS):
+            if measurements[i - 1] > measurements[i] and measurements[i] < measurements[(i + 1) % len(measurements)]:
+                closeDistanceIndices.append(i)
+                closeDistanceValues.append(measurements[i])
+        # high distance indices found
+        print("CLOSE DISTANCE INDICES:")
+        print(closeDistanceIndices)
+        metaIndicesOppositePairs = arrayUtils.getIndicePairsWithValueDistance(closeDistanceIndices, ROTATION_STEPS / 2, OPPOSITE_TOLERANCE)
+        spotsFound = False
+        # whether the upperWall variables actually correspond to the upper wall is not guaranteed
+        upperWallIndex = -1
+        lowerWallIndex = -1
+        distanceUpperWall = -1
+        distanceLowerWall = -1
+        for metaIndexTuple in metaIndicesOppositePairs:
+            (metaIndexOne, metaIndexTwo) = metaIndexTuple
+            dif = abs(closeDistanceValues[metaIndexOne] + closeDistanceValues[metaIndexTwo] - BOARD_HEIGHT)
+            if  dif < WALL_DISTANCE_EPSILON:
+                # we found two spots that are opposite to each other on our rotation range and that have the correct distance to each other
+                spotsFound = True
+                upperWallIndex = closeDistanceIndices[metaIndexOne]
+                lowerWallIndex = closeDistanceIndices[metaIndexTwo]
+                distanceUpperWall = closeDistanceValues[metaIndexOne]
+                distanceLowerWall = closeDistanceValues[metaIndexTwo]
+        if spotsFound:
+            if abs(distanceLowerWall - distanceUpperWall) < ALREADY_MIDDLE_LINE_EPSILON:
+                # case already on the middle line
+                # ensure good rotation. If already looking in direction of middle line, no rotation is necessary
+                # TODO might result in walking middle line in only one direction
+                self.robotPartialRotation(round(lowerWallIndex + ROTATION_STEPS / 4))
+                self.robotMoveForwardAnimated(D_ML_FOLLOWING)
+            else:
+                # not on the middle line yet
+                if distanceUpperWall < distanceLowerWall:
+                    self.robotPartialRotation(lowerWallIndex)
+                    # min to avoid overshoot
+                    self.robotMoveForwardAnimated(min(D_ML_APPROACHING, abs(distanceLowerWall - BOARD_HEIGHT / 2)))
+                else: 
+                    # upper wall is further away, so move in that direction
+                    self.robotPartialRotation(upperWallIndex)
+                    self.robotMoveForwardAnimated(min(D_ML_APPROACHING, abs(distanceUpperWall - BOARD_HEIGHT / 2)))
+        return spotsFound
+
+
 
     def detectCenterLine(self, measurements):
         centerLineDetected = False
@@ -94,7 +145,7 @@ class Algorithm(threading.Thread):
     def hasObstacleInGazeDirection(self, measurements):
         return False
 
-    def behaveRandomly(self, measurements):
+    def robotMoveRandomly(self, measurements):
         SAFETY_DISTANCE = 100
         MOVING_DISTANCE = 80
         print("Falling back to random behaviour")

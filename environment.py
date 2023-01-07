@@ -21,7 +21,7 @@ class Environment:
     def __init__(self):
         self.rectangles = []
         self.initSimpleMap()
-        # self.drawFourTables(40, 40, 500)
+        self.drawFourTables(40, 40, 500)
 
     # calculates the distance to the closest obstacle from the position (x,y)
     # with gaze direction indicated by the angle theta
