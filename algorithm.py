@@ -31,7 +31,90 @@ class Algorithm(threading.Thread):
         BOARD_HEIGHT = self.environment.HEIGHT - 2 * self.environment.WALL_SIZE
 
     def run(self):
-        self.scannerAlgorithmSimple()
+        self.scannerAlgorithm()
+
+    def scannerAlgorithm(self):
+        D_DOOR = 300
+
+        dt = 0
+        lasttime = datetime.now()
+        while(self.running): # basically while(true)
+            # time difference to last action
+            dt = (datetime.now() - lasttime).total_seconds()
+            lasttime = datetime.now()
+            measurements = self.robotFullRotationMeasuring()
+            (doorDetected, indexDoorMiddle) = self.detectDoor(measurements)
+            if doorDetected:
+                # make the robot look to the supposed center of the door
+                self.robotPartialRotation(indexDoorMiddle)
+                self.robotMoveForwardAnimated(D_DOOR)
+            elif self.isOnCenterLine(measurements):
+                pass
+            else:
+                (centerLineDetected, indexCenterLine, distance) = self.detectCenterLine(measurements)
+                if centerLineDetected:
+                    pass
+                else: # random action
+                    self.behaveRandomly(measurements)
+                        
+    def detectDoor(self, measurements):   
+        CUTOFF_DELTA = 150
+        print("MEASUREMENTS")
+        self.printArray(measurements)
+        # TODO list of drop and increase indices
+        dropIndex = -1
+        increaseIndex = -1
+        for i in range(ROTATION_STEPS):
+            if measurements[i - 1] + CUTOFF_DELTA < measurements[i]:
+                dropIndex = i
+            if measurements[i] > measurements[(i + 1) % len(measurements)] + CUTOFF_DELTA:
+                increaseIndex = i
+        # find index of angle corresponding to door
+        indexDoorMiddle = -1
+        doorDetected = dropIndex != -1 and increaseIndex != -1
+        if doorDetected:
+            # calculate estimated middle of the door
+            if dropIndex < increaseIndex:
+                indexDoorMiddle = round(0.5 * (increaseIndex + dropIndex))
+            else:
+                indexDoorMiddle = round((0.5 * (dropIndex + increaseIndex + len(measurements))) % len(measurements))
+        print("drop index   door index   increaseIndex", (dropIndex, indexDoorMiddle, increaseIndex))
+        return (doorDetected, indexDoorMiddle)
+
+    def isOnCenterLine(self, measurements):
+        epsilon = 10
+        return False
+
+    def detectCenterLine(self, measurements):
+        centerLineDetected = False
+        indexCenterLine = 0
+        distance = 100
+        return (centerLineDetected, indexCenterLine, distance)
+
+    def hasObstacleInGazeDirection(self, measurements):
+        return False
+
+    def behaveRandomly(self, measurements):
+        SAFETY_DISTANCE = 100
+        MOVING_DISTANCE = 80
+        print("Falling back to random behaviour")
+        while self.hasObstacleInGazeDirection(measurements):
+            pass
+
+    # just for the simulation
+    def robotMoveForwardAnimated(self, distance):
+        # TODO use
+        MOVING_SPEED = 50 
+        FPS = 30
+        forwardStep = MOVING_SPEED / FPS
+        distanceLeft = distance
+        while distanceLeft > forwardStep:
+            self.robotMoveForward(forwardStep)
+            time.sleep(1 / FPS)
+            distanceLeft -= forwardStep
+        #do what's left to go the distance precisely
+        if distanceLeft > 0:
+            self.robotMoveForward(distanceLeft)
 
     # very simple algorithm for testing
     def backAndForthAlgorithm(self):
@@ -152,9 +235,6 @@ class Algorithm(threading.Thread):
                 distanceToGo -= 1
             
 
-
-
-
     # assuming we have solved inverse kinematics, we can tell the robot to drive forward and to turn some angle directly
 
     def robotMoveForward(self, distance):
@@ -191,3 +271,6 @@ class Algorithm(threading.Thread):
                 self.robotTurn(2 * math.pi / ROTATION_STEPS)
                 time.sleep(ROTATION_TIME / ROTATION_STEPS)
 
+    def printArray(self, array):
+        for i in range(0, len(array)):
+            print(str(i) + "   " + str(array[i]))
