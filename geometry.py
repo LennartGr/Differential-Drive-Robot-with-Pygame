@@ -38,24 +38,55 @@ def RectAsQuadrangle(x_min, x_max, y_min, y_max):
     c4 = np.array([x_max, y_min])
     return Quadrangle(c1, c2, c3, c4)
 
+# point as np.array
+# return (dist to closest point on segment, closest point on segment)
+def calculateDistancePointLineSegment(point, lineSegment):
+    # d is direction vector from a to b, the two points defining the line segment
+    d = lineSegment.b - lineSegment.a
+    d = d / np.linalg.norm(d)
+    # let the projection v = a + t * d be the projection of point to the LINE defined by the line segment
+    # calculate t by
+    t = np.dot(point, d) - np.dot(lineSegment.a, d)
+    projection = lineSegment.a + t * d
+    # check if v is actually on the line segment. If not, the point is closest to one of the ends
+    if t < 0 or t > np.linalg.norm(lineSegment.b - lineSegment.a):
+        # projection not on the line segment
+        distPointToA = np.linalg.norm(point - lineSegment.a)
+        distPointToB = np.linalg.norm(point - lineSegment.b)
+        if (distPointToA < distPointToB):
+            return (distPointToA, lineSegment.a)
+        else:
+            return (distPointToB, lineSegment.b)
+    # projection lies on the line segment
+    return (np.linalg.norm(point - projection), projection)
+
 
 #Return (boolIntersection, intersectionPoint)
 #if there are multiple intersection points, return the closest one in terms of the ray's parameter p
 def calculateIntersectionRayLineSegment(ray, lineSegment):
+    # case one: ray.p already on line segment. distance zero
+    (dist, projection) = calculateDistancePointLineSegment(ray.p, lineSegment)
+    if dist == 0:
+        return (0, projection)
+    # other cases: p not on line segment
     d_prime = np.array([-ray.d[1], ray.d[0]])
     denominator = np.dot(d_prime, lineSegment.b - lineSegment.a)
-    #treat special case first: denominator close to zero
+    #treat special case first: denominator close to zero. ray and line segment are parallel
     epsilon = 0.005
-    if abs(denominator) < epsilon:        
+    if abs(denominator) < epsilon: 
+        # do this to avoid division by close to zero
         if (np.linalg.norm(ray.p - lineSegment.a)) <= epsilon:
             return (True, lineSegment.a)
-        #case 1.1: lineSegment parallel, but not aligned. No intersection
-        #no division by zero possible
-        comparison_direction = (ray.p - lineSegment.a) / (np.linalg.norm(ray.p - lineSegment.a))
-        #check if comparison direction and ray direction are equal are opposite to each other
-        if np.linalg.norm(ray.d - comparison_direction) < epsilon or np.linalg.norm(ray.d + comparison_direction) < epsilon:
-            dist_a = np.linalg.norm(ray.p - lineSegment.a)
-            dist_b = np.linalg.norm(ray.p - lineSegment.b)
+        
+        # vector from p to a
+        comparison_direction = (lineSegment.a - ray.p)
+        comparison_direction = comparison_direction / np.linalg.norm(comparison_direction)
+        # check if comparison direction and ray direction are EQUAL 
+        # if they are opposite to each other, there is no intersection !!!
+        if np.linalg.norm(ray.d - comparison_direction) < epsilon:
+            # because p doesn't lie on the segment, it is closest to one of the end points
+            dist_a = np.linalg.norm(lineSegment.a - ray.p)
+            dist_b = np.linalg.norm(lineSegment.b - ray.p)
             if dist_a <= dist_b:
                 return (True, lineSegment.a)
             else:
@@ -63,6 +94,7 @@ def calculateIntersectionRayLineSegment(ray, lineSegment):
         else:
             #not alligned, no intersection
             return (False, np.array([0, 0]))
+        
 
     #regular case: lineSegment direction and ray direction not parallel
     t_line = np.dot(d_prime, ray.p - lineSegment.a) / denominator

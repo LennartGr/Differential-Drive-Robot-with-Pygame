@@ -64,8 +64,38 @@ def testCorrectIntersectionPoint():
     lineSegment = LineSegment(np.array([0, 480]), np.array([1000, 480]))
     print(calculateIntersectionRayLineSegment(ray, lineSegment))
 
+def testForNoIntersectionPoint():
+    rect = RectAsQuadrangle(1000, 1200, 250, 500)
+    ray = RayFromPointAndAngle(np.array([600, 250]), math.pi)
+    (intersection, point) = calculateIntersectionRayQuadrangle(ray, rect)
+    assert intersection == False
+
+    
+def testDistPointLineSegment():
+    epsilon = 0.000001
+    point = np.array([0, 0])
+
+    l1 = LineSegment(np.array([-1, 0]), np.array([1, 0]))
+    (dist, proj) = calculateDistancePointLineSegment(point, l1)
+    assert dist == 0
+
+    l2 = LineSegment(np.array([-1, 1]), np.array([10, 1]))
+    (dist, proj) = calculateDistancePointLineSegment(point, l2)
+    assert dist == 1
+    assert areEqual(proj, np.array([0, 1]))
+
+    l3 = LineSegment(np.array([3, 1]), np.array([4, 1]))
+    (dist, proj) = calculateDistancePointLineSegment(point, l3)
+    assert dist == math.sqrt(pow(3, 2) + pow(1, 2))
+    assert areEqual(proj, np.array([3, 1]))
+
+def areEqual(pointA, pointB):
+    epsilon = 0.0000001
+    return np.linalg.norm(pointA - pointB) < epsilon
+
 if __name__ == "__main__":
     #testParallelNoIntersection()
     #testParallelWithIntersectionB()
     # testIntersectionRayQuadrangle()
-    testCorrectIntersectionPoint()
+    testForNoIntersectionPoint()
+    testDistPointLineSegment()
