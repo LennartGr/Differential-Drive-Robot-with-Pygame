@@ -87,8 +87,10 @@ class Algorithm(threading.Thread):
         OPPOSITE_TOLERANCE = 2
         WALL_DISTANCE_EPSILON = 10
         ALREADY_MIDDLE_LINE_EPSILON = 20
-        D_ML_FOLLOWING = 100
+        D_ML_FOLLOWING = 80
         D_ML_APPROACHING = 50
+        # when the robot is believed to be on the middle line but an obstacle blocks the way with this distance, turn
+        D_ML_WALL_TURN = 150
         closeDistanceIndices = []
         closeDistanceValues = []
 
@@ -126,6 +128,10 @@ class Algorithm(threading.Thread):
                 correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
                 correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
                 self.robotPartialRotation(min(correctionDirectionA, correctionDirectionB))
+                # check if robot needs to turn 180 degree
+                if self.getRobotDistToObstacle() < D_ML_WALL_TURN:
+                    self.robotPartialRotation(round(ROTATION_STEPS / 2))
+                # if we are really on the middle line, the robot should be able to move in the other direction without crashing into obstacle
                 self.robotMoveForwardAnimated(D_ML_FOLLOWING)
             else:
                 # not on the middle line yet
@@ -191,6 +197,10 @@ class Algorithm(threading.Thread):
             # simulate calculation that takes some time
             time.sleep(0.5)
             self.robot.x += sign * dt * vel
+
+    # return the distance of the robot to the next obstacle in the robot's gaze direction
+    def getRobotDistToObstacle(self):
+        return self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta)
 
     # control wheel velocities with keyboard, w-s-e-d keys
     def manualControlAlgorithm(self):
