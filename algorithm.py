@@ -44,8 +44,9 @@ class Algorithm(threading.Thread):
             lasttime = datetime.now()
             measurements = self.robotFullRotationMeasuring()
             (doorDetected, indexDoorMiddle) = self.detectDoor(measurements)
-            if False and doorDetected:
+            if doorDetected:
                 # make the robot look to the supposed center of the door
+                print("Door detected, approaching it")
                 self.robotPartialRotation(indexDoorMiddle)
                 self.robotMoveForwardAnimated(D_DOOR)
             else:
@@ -55,26 +56,29 @@ class Algorithm(threading.Thread):
                         
     def detectDoor(self, measurements):   
         CUTOFF_DELTA = 150
+        MIN_DOOR_INDEX_WIDTH = round(ROTATION_STEPS / 36)
         print("MEASUREMENTS")
         self.printArray(measurements)
         # TODO list of drop and increase indices
-        dropIndex = -1
-        increaseIndex = -1
+        dropIndexList = []
+        increaseIndexList = []
         for i in range(ROTATION_STEPS):
             if measurements[i - 1] + CUTOFF_DELTA < measurements[i]:
-                dropIndex = i
+                dropIndexList.append(i)
             if measurements[i] > measurements[(i + 1) % len(measurements)] + CUTOFF_DELTA:
-                increaseIndex = i
+                increaseIndexList.append(i)
         # find index of angle corresponding to door
+        (doorDetected, doorStartIndex, doorEndIndex) = arrayUtils.detectDoor(dropIndexList, increaseIndexList, MIN_DOOR_INDEX_WIDTH, ROTATION_STEPS)
+        if not doorDetected:
+            return (False, 0)
+        # door detected, calculate door middle
         indexDoorMiddle = -1
-        doorDetected = dropIndex != -1 and increaseIndex != -1
-        if doorDetected:
-            # calculate estimated middle of the door
-            if dropIndex < increaseIndex:
-                indexDoorMiddle = round(0.5 * (increaseIndex + dropIndex))
-            else:
-                indexDoorMiddle = round((0.5 * (dropIndex + increaseIndex + len(measurements))) % len(measurements))
-        print("drop index   door index   increaseIndex", (dropIndex, indexDoorMiddle, increaseIndex))
+        # calculate estimated middle of the door
+        if doorStartIndex < doorEndIndex:
+            indexDoorMiddle = round(0.5 * (doorEndIndex + doorStartIndex))
+        else:
+            indexDoorMiddle = round((0.5 * (doorStartIndex + doorEndIndex + len(measurements))) % len(measurements))
+        print("drop index   door index   increaseIndex", (doorStartIndex, indexDoorMiddle, doorEndIndex))
         return (doorDetected, indexDoorMiddle)
 
     # searches the center line by analyzing the measurements.
@@ -145,23 +149,15 @@ class Algorithm(threading.Thread):
                     self.robotMoveForwardAnimated(min(D_ML_APPROACHING, abs(distanceUpperWall - BOARD_HEIGHT / 2)))
         return spotsFound
 
-
-
-    def detectCenterLine(self, measurements):
-        centerLineDetected = False
-        indexCenterLine = 0
-        distance = 100
-        return (centerLineDetected, indexCenterLine, distance)
-
-    def hasObstacleInGazeDirection(self, measurements):
-        return False
-
+    # TODO maybe try something more random
     def robotMoveRandomly(self, measurements):
         SAFETY_DISTANCE = 100
-        MOVING_DISTANCE = 80
+        MOVING_DISTANCE = 70
+        AMOUNT_TURN = round(ROTATION_STEPS / 8)
         print("Falling back to random behaviour")
-        while self.hasObstacleInGazeDirection(measurements):
-            pass
+        while self.getRobotDistToObstacle() < SAFETY_DISTANCE:
+            self.robotPartialRotation(AMOUNT_TURN)
+        self.robotMoveForwardAnimated(MOVING_DISTANCE)
 
     # just for the simulation
     def robotMoveForwardAnimated(self, distance):
@@ -336,7 +332,7 @@ class Algorithm(threading.Thread):
         else:
             # more efficient to rotate in the other direction
             for i in range(ROTATION_STEPS - steps):
-                self.robotTurn(2 * math.pi / ROTATION_STEPS)
+                self.robotTurn(- 2 * math.pi / ROTATION_STEPS)
                 time.sleep(ROTATION_TIME / ROTATION_STEPS)
 
     def printArray(self, array):
