@@ -56,7 +56,7 @@ class Algorithm(threading.Thread):
                         
     def detectDoor(self, measurements):   
         CUTOFF_DELTA = 150
-        MIN_DOOR_INDEX_WIDTH = round(ROTATION_STEPS / 36)
+        MIN_DOOR_INDEX_WIDTH = round(ROTATION_STEPS / 4)
         print("MEASUREMENTS")
         self.printArray(measurements)
         # TODO list of drop and increase indices

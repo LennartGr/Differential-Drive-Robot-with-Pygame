@@ -26,3 +26,14 @@ dropIndexList = [5, 6, 7, 9]
 increaseIndexList = [4, 8]
 (doorDetected, di, ii) = detectDoor(dropIndexList, increaseIndexList, 5, 10)
 assert (doorDetected, di, ii) == (True, 9, 4)
+
+# check false if drop index in between
+dropIndexList = [2, 5, 6, 7, 9]
+increaseIndexList = [4, 8]
+(doorDetected, di, ii) = detectDoor(dropIndexList, increaseIndexList, 5, 10)
+assert not doorDetected
+
+dropIndexList = [2, 5, 9]
+increaseIndexList = [8]
+(doorDetected, di, ii) = detectDoor(dropIndexList, increaseIndexList, 5, 10)
+assert not doorDetected
