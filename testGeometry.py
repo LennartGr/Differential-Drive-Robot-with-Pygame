@@ -56,7 +56,16 @@ def testIntersectionRayQuadrangle():
     #expecting (True, (4, 4))
     print(calculateIntersectionRayQuadrangle(ray, quadrangle))
 
+def testCorrectIntersectionPoint():
+    rect = RectAsQuadrangle(0, 1000, 500 - 20, 500)
+    ray = RayFromPointAndAngle(np.array([600, 250]), math.pi / 2)
+    print(calculateIntersectionRayQuadrangle(ray, rect))
+
+    lineSegment = LineSegment(np.array([0, 480]), np.array([1000, 480]))
+    print(calculateIntersectionRayLineSegment(ray, lineSegment))
+
 if __name__ == "__main__":
     #testParallelNoIntersection()
     #testParallelWithIntersectionB()
-    testIntersectionRayQuadrangle()
+    # testIntersectionRayQuadrangle()
+    testCorrectIntersectionPoint()

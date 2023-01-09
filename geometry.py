@@ -34,8 +34,8 @@ class Quadrangle:
 def RectAsQuadrangle(x_min, x_max, y_min, y_max):
     c1 = np.array([x_min, y_min])
     c2 = np.array([x_min, y_max])
-    c3 = np.array([x_max, y_min])
-    c4 = np.array([x_max, y_max])
+    c3 = np.array([x_max, y_max])
+    c4 = np.array([x_max, y_min])
     return Quadrangle(c1, c2, c3, c4)
 
 
@@ -86,7 +86,7 @@ def calculateIntersectionRayQuadrangle(ray, quadrangle):
         (segmentIntersects, segmentIntersectionPoint) = calculateIntersectionRayLineSegment(ray, lineSegment)
         if segmentIntersects:
             #is this the first intersection we found?
-            if intersection == False:
+            if not intersection:
                 intersection = True
                 intersectionPoint = segmentIntersectionPoint
             #if this is not the first intersection we found, is it better then the previous ones (i.e. closer)?
