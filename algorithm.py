@@ -10,6 +10,7 @@ from math import sin, cos, tan
 
 UPDATES_PER_SECOND = 20
 # how many measurements are taken with a single rotation
+# attention: buggy when set to something little as four
 ROTATION_STEPS = 360
 # how many seconds shall one rotation take (for display reasons)
 ROTATION_TIME = 3
@@ -84,8 +85,8 @@ class Algorithm(threading.Thread):
     # TODO on center line but wall ahead
     def searchCenterLineAndMove(self, measurements):
         OPPOSITE_TOLERANCE = 2
-        WALL_DISTANCE_EPSILON = 40
-        ALREADY_MIDDLE_LINE_EPSILON = 100
+        WALL_DISTANCE_EPSILON = 10
+        ALREADY_MIDDLE_LINE_EPSILON = 20
         D_ML_FOLLOWING = 100
         D_ML_APPROACHING = 50
         closeDistanceIndices = []
@@ -115,12 +116,16 @@ class Algorithm(threading.Thread):
                 lowerWallIndex = closeDistanceIndices[metaIndexTwo]
                 distanceUpperWall = closeDistanceValues[metaIndexOne]
                 distanceLowerWall = closeDistanceValues[metaIndexTwo]
+                # TODO look for other candidates as well, prefer the one where upper and lower wall are 90 deg. angle to robot gaze
+                break
         if spotsFound:
             if abs(distanceLowerWall - distanceUpperWall) < ALREADY_MIDDLE_LINE_EPSILON:
                 # case already on the middle line
                 # ensure good rotation. If already looking in direction of middle line, no rotation is necessary
                 # TODO might result in walking middle line in only one direction
-                self.robotPartialRotation(round(lowerWallIndex + ROTATION_STEPS / 4))
+                correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
+                correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
+                self.robotPartialRotation(min(correctionDirectionA, correctionDirectionB))
                 self.robotMoveForwardAnimated(D_ML_FOLLOWING)
             else:
                 # not on the middle line yet
@@ -312,6 +317,8 @@ class Algorithm(threading.Thread):
 
     # make a partial rotation without taking measurements
     def robotPartialRotation(self, steps):
+        # avoid more than one rotation
+        steps = steps % ROTATION_STEPS
         if steps < ROTATION_STEPS / 2:
             for i in range(steps):
                 self.robotTurn(2 * math.pi / ROTATION_STEPS)
