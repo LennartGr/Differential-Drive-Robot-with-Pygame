@@ -11,6 +11,8 @@ def getIndicePairsWithValueDistance(myArray, searchedDistance, tolerance):
 
 # find the first (i, j) with i drop index, j increase index such that i and j have the min required gap and j is the first increase index higher than i
 def detectDoor(dropIndexList, increaseIndexList, minRequiredGap, rotationSteps):
+    if len(dropIndexList) == 0 or len(increaseIndexList) == 0:
+        return (False, 0, 0)
     # special case checked first: do we start by looking at the center of the door?
     # only the very last drop index is a candidate with the very first increase index
     singleDropIndex = len(dropIndexList) == 1

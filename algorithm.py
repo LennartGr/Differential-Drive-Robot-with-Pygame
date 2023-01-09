@@ -13,7 +13,8 @@ UPDATES_PER_SECOND = 20
 # attention: buggy when set to something little as four
 ROTATION_STEPS = 360
 # how many seconds shall one rotation take (for display reasons)
-ROTATION_TIME = 3
+ROTATION_TIME = 0.1
+MOVING_SPEED = 200
 
 # fetched from environment
 BOARD_WIDTH = environment.Environment.WIDTH - 2 * environment.Environment.WALL_SIZE
@@ -43,20 +44,14 @@ class Algorithm(threading.Thread):
             dt = (datetime.now() - lasttime).total_seconds()
             lasttime = datetime.now()
             measurements = self.robotFullRotationMeasuring()
-            (doorDetected, indexDoorMiddle) = self.detectDoor(measurements)
-            if doorDetected:
-                # make the robot look to the supposed center of the door
-                print("Door detected, approaching it")
-                self.robotPartialRotation(indexDoorMiddle)
-                self.robotMoveForwardAnimated(D_DOOR)
-            else:
-                centerLineFound = self.searchCenterLineAndMove(measurements)
-                if not centerLineFound:
-                    self.robotMoveRandomly(measurements)
+            centerLineFound = self.searchCenterLineAndMove(measurements)
+            if not centerLineFound:
+                self.robotMoveRandomly(measurements)
+                
                         
     def detectDoor(self, measurements):   
-        CUTOFF_DELTA = 150
-        MIN_DOOR_INDEX_WIDTH = round(ROTATION_STEPS / 4)
+        CUTOFF_DELTA = 500
+        MIN_DOOR_INDEX_WIDTH = round(ROTATION_STEPS / 36)
         print("MEASUREMENTS")
         self.printArray(measurements)
         # TODO list of drop and increase indices
@@ -95,6 +90,7 @@ class Algorithm(threading.Thread):
         D_ML_APPROACHING = 50
         # when the robot is believed to be on the middle line but an obstacle blocks the way with this distance, turn
         D_ML_WALL_TURN = 150
+        D_DOOR = 500
         closeDistanceIndices = []
         closeDistanceValues = []
 
@@ -129,14 +125,23 @@ class Algorithm(threading.Thread):
                 # case already on the middle line
                 # ensure good rotation. If already looking in direction of middle line, no rotation is necessary
                 # TODO might result in walking middle line in only one direction
-                correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
-                correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
-                self.robotPartialRotation(min(correctionDirectionA, correctionDirectionB))
-                # check if robot needs to turn 180 degree
-                if self.getRobotDistToObstacle() < D_ML_WALL_TURN:
-                    self.robotPartialRotation(round(ROTATION_STEPS / 2))
-                # if we are really on the middle line, the robot should be able to move in the other direction without crashing into obstacle
-                self.robotMoveForwardAnimated(D_ML_FOLLOWING)
+                # check if we can see the door from here and that it is fairly large -----------------------------------------------------------
+                (doorDetected, indexDoorMiddle) = self.detectDoor(measurements)
+                if doorDetected:
+                    # make the robot look to the supposed center of the door
+                    print("Door detected, approaching it")
+                    self.robotPartialRotation(indexDoorMiddle)
+                    self.robotMoveForwardAnimated(D_DOOR)
+                # ------------------------------------------------------------------------------------------------------------------------------
+                else:     
+                    correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
+                    correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
+                    self.robotPartialRotation(min(correctionDirectionA, correctionDirectionB))
+                    # check if robot needs to turn 180 degree
+                    if self.getRobotDistToObstacle() < D_ML_WALL_TURN:
+                        self.robotPartialRotation(round(ROTATION_STEPS / 2))
+                    # if we are really on the middle line, the robot should be able to move in the other direction without crashing into obstacle
+                    self.robotMoveForwardAnimated(D_ML_FOLLOWING)
             else:
                 # not on the middle line yet
                 if distanceUpperWall < distanceLowerWall:
@@ -162,7 +167,7 @@ class Algorithm(threading.Thread):
     # just for the simulation
     def robotMoveForwardAnimated(self, distance):
         # TODO use
-        MOVING_SPEED = 50 
+        
         FPS = 30
         forwardStep = MOVING_SPEED / FPS
         distanceLeft = distance

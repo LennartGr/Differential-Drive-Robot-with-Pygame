@@ -6,7 +6,7 @@ import numpy as np
 # doesn't need to know any other component
 class Environment:
 
-    WIDTH = 1200
+    WIDTH = 1800
     HEIGHT = 500
     WALL_SIZE = 20
     # constants of the door. (x, y) is top left corner of emptiness
