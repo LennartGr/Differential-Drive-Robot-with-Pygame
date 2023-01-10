@@ -43,7 +43,7 @@ class Algorithm(threading.Thread):
             # time difference to last action
             dt = (datetime.now() - lasttime).total_seconds()
             lasttime = datetime.now()
-            measurements = self.robotFullRotationMeasuring()
+            measurements = self.robotRotationMeasuring()
             centerLineFound = self.searchCenterLineAndMove(measurements)
             if not centerLineFound:
                 self.robotMoveRandomly(measurements)
@@ -75,6 +75,34 @@ class Algorithm(threading.Thread):
             indexDoorMiddle = round((0.5 * (doorStartIndex + doorEndIndex + len(measurements))) % len(measurements))
         print("drop index   door index   increaseIndex", (doorStartIndex, indexDoorMiddle, doorEndIndex))
         return (doorDetected, indexDoorMiddle)
+
+    def detectDoorSpecific(self, wallDistance):
+        # TODO values shall depend on wall distance and door position
+        START_SCAN_INDEX = 320
+        END_SCAN_INDEX = 10
+        ROTATION_AMOUNT = (ROTATION_STEPS + END_SCAN_INDEX - START_SCAN_INDEX) % ROTATION_STEPS
+        CUTOFF_DELTA = 200
+        D_DOOR = 250
+        # good rotation is ensured 
+        # set up for scan
+        self.robotPartialRotation(START_SCAN_INDEX)
+        measurements = self.robotRotationMeasuring(myRotationSteps = ROTATION_AMOUNT)
+        dropIndexList = []
+        increaseIndexList = []
+        for i in range(len(measurements)):
+            if measurements[i - 1] + CUTOFF_DELTA < measurements[i]:
+                dropIndexList.append(i)
+            if measurements[i] > measurements[(i + 1) % len(measurements)] + CUTOFF_DELTA:
+                increaseIndexList.append(i)
+        # because we only did a partial rotation, we expect only one drop and one increase index
+        if (len(dropIndexList) == 1) and (len(increaseIndexList) == 1):
+            indexDoorMiddle = round(0.5 * (dropIndexList[0] + increaseIndexList[0]))
+            # make the robot look to the door middle
+            self.robotPartialRotation(ROTATION_STEPS - ROTATION_AMOUNT + indexDoorMiddle)
+            # make a big step through the door
+            self.robotMoveForwardAnimated(D_DOOR)
+            return True
+        return False
 
     # searches the center line by analyzing the measurements.
     # if robot already on sensor line: follow it
@@ -126,22 +154,20 @@ class Algorithm(threading.Thread):
                 # ensure good rotation. If already looking in direction of middle line, no rotation is necessary
                 # TODO might result in walking middle line in only one direction
                 # check if we can see the door from here and that it is fairly large -----------------------------------------------------------
-                (doorDetected, indexDoorMiddle) = self.detectDoor(measurements)
-                if doorDetected:
-                    # make the robot look to the supposed center of the door
-                    print("Door detected, approaching it")
-                    self.robotPartialRotation(indexDoorMiddle)
-                    self.robotMoveForwardAnimated(D_DOOR)
-                # ------------------------------------------------------------------------------------------------------------------------------
-                else:     
-                    correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
-                    correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
-                    self.robotPartialRotation(min(correctionDirectionA, correctionDirectionB))
-                    # check if robot needs to turn 180 degree
-                    if self.getRobotDistToObstacle() < D_ML_WALL_TURN:
+                correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
+                correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
+                self.robotPartialRotation(min(correctionDirectionA, correctionDirectionB))
+                # check if robot is close to wall
+                if self.getRobotDistToObstacle() < D_ML_WALL_TURN:
+                    # make an attempt in detecting and passing the door
+                    doorPassed = self.detectDoorSpecific(D_ML_WALL_TURN)
+                    if doorPassed:
+                        return
+                    # turn 180 deg and go to the other side of the wall
+                    else:
                         self.robotPartialRotation(round(ROTATION_STEPS / 2))
-                    # if we are really on the middle line, the robot should be able to move in the other direction without crashing into obstacle
-                    self.robotMoveForwardAnimated(D_ML_FOLLOWING)
+                # if we are really on the middle line, the robot should be able to move in the other direction without crashing into obstacle
+                self.robotMoveForwardAnimated(D_ML_FOLLOWING)
             else:
                 # not on the middle line yet
                 if distanceUpperWall < distanceLowerWall:
@@ -268,7 +294,7 @@ class Algorithm(threading.Thread):
             # time difference to last action
             dt = (datetime.now() - lasttime).total_seconds()
             lasttime = datetime.now()
-            measurements = self.robotFullRotationMeasuring()
+            measurements = self.robotRotationMeasuring()
             # search measurements for the two closest points on each horizontal wall
             # distance roughly BOARD_HEIGHT to each other
             # search for four non-monotone spots
@@ -318,9 +344,9 @@ class Algorithm(threading.Thread):
     def robotTurnLeft(self):
         self.robotTurn(- (math.pi / 2))
 
-    def robotFullRotationMeasuring(self):
+    def robotRotationMeasuring(self, myRotationSteps = ROTATION_STEPS):
         measurements = []
-        for i in range(ROTATION_STEPS):
+        for i in range(myRotationSteps):
             measurements.append(self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta))
             self.robotTurn(2 * math.pi / ROTATION_STEPS)
             time.sleep(ROTATION_TIME / ROTATION_STEPS)
