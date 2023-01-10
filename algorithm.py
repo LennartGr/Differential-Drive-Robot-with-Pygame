@@ -102,6 +102,8 @@ class Algorithm(threading.Thread):
             # make a big step through the door
             self.robotMoveForwardAnimated(D_DOOR)
             return True
+        # door not detected, make sure robot is looking in same direction as previously
+        self.robotPartialRotation(ROTATION_STEPS - ROTATION_AMOUNT + ROTATION_STEPS - START_SCAN_INDEX)
         return False
 
     # searches the center line by analyzing the measurements.
