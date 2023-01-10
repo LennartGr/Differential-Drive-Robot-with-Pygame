@@ -44,6 +44,7 @@ class Algorithm(threading.Thread):
             dt = (datetime.now() - lasttime).total_seconds()
             lasttime = datetime.now()
             measurements = self.robotRotationMeasuring()
+            self.printArray(measurements)
             centerLineFound = self.searchCenterLineAndMove(measurements)
             if not centerLineFound:
                 self.robotMoveRandomly(measurements)
@@ -81,7 +82,7 @@ class Algorithm(threading.Thread):
         START_SCAN_INDEX = 320
         END_SCAN_INDEX = 10
         ROTATION_AMOUNT = (ROTATION_STEPS + END_SCAN_INDEX - START_SCAN_INDEX) % ROTATION_STEPS
-        CUTOFF_DELTA = 200
+        CUTOFF_DELTA = 100
         D_DOOR = 250
         # good rotation is ensured 
         # set up for scan
@@ -220,7 +221,7 @@ class Algorithm(threading.Thread):
 
             # modify state of robot respectively to passed time and the environment
             # if close to obstacle, go to the other direction
-            if self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta) < 10:
+            if self.getRobotDistToObstacle() < 10:
                 sign = -sign
                 self.robot.theta += math.pi
             # simulate calculation that takes some time
@@ -228,8 +229,12 @@ class Algorithm(threading.Thread):
             self.robot.x += sign * dt * vel
 
     # return the distance of the robot to the next obstacle in the robot's gaze direction
-    def getRobotDistToObstacle(self):
-        return self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta)
+    def getRobotDistToObstacle(self, cutoff = True):
+        CUTOFF_VALUE = 300
+        realDistance = self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta)
+        if cutoff:
+            return min(realDistance, CUTOFF_VALUE)
+        return realDistance
 
     # control wheel velocities with keyboard, w-s-e-d keys
     def manualControlAlgorithm(self):
@@ -288,7 +293,7 @@ class Algorithm(threading.Thread):
     # go some distance in the direction of that spot
     def scannerAlgorithmSimple(self):
         epsilon = 10
-        cutoffDelta = 170
+        cutoffDelta = 40
         forwardAfterRotation = 300 # shall be a whole number
         dt = 0
         lasttime = datetime.now()
@@ -349,7 +354,7 @@ class Algorithm(threading.Thread):
     def robotRotationMeasuring(self, myRotationSteps = ROTATION_STEPS):
         measurements = []
         for i in range(myRotationSteps):
-            measurements.append(self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta))
+            measurements.append(self.getRobotDistToObstacle())
             self.robotTurn(2 * math.pi / ROTATION_STEPS)
             time.sleep(ROTATION_TIME / ROTATION_STEPS)
         return measurements
