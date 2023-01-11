@@ -36,12 +36,7 @@ class Algorithm(threading.Thread):
 
     # our algorithm
     def scannerAlgorithm(self):
-        dt = 0
-        lasttime = datetime.now()
         while(self.running): # basically while(true)
-            # time difference to last action: for the simulation
-            dt = (datetime.now() - lasttime).total_seconds()
-            lasttime = datetime.now()
             measurements = self.robotRotationMeasuring()
             centerLineFound = self.searchCenterLineAndMove(measurements)
             if not centerLineFound:
@@ -53,6 +48,7 @@ class Algorithm(threading.Thread):
     # return false if no clue where center line is, in that case robot was not moved
     # else return true
     def searchCenterLineAndMove(self, measurements):
+        # tolerance for finding spots 180 deg opposite to each other
         OPPOSITE_TOLERANCE = 2
         WALL_DISTANCE_EPSILON = 10
         ALREADY_MIDDLE_LINE_EPSILON = 20
@@ -68,10 +64,10 @@ class Algorithm(threading.Thread):
             if measurements[i - 1] > measurements[i] and measurements[i] < measurements[(i + 1) % len(measurements)]:
                 closeDistanceIndices.append(i)
                 closeDistanceValues.append(measurements[i])
-        # high distance indices found
-        print("CLOSE DISTANCE INDICES:")
-        print(closeDistanceIndices)
+        # close distance indices found
+        # find all pairs (i, j) of close distance indices where i and j indicate spots opposite to each other
         metaIndicesOppositePairs = arrayUtils.getIndicePairsWithValueDistance(closeDistanceIndices, ROTATION_STEPS / 2, OPPOSITE_TOLERANCE)
+        # try to find the one pair (i, j) that corresponds to the two spots, one per wall (upper and lower wall)
         spotsFound = False
         # whether the upperWall variables actually correspond to the upper wall is not guaranteed
         upperWallIndex = -1
@@ -94,7 +90,6 @@ class Algorithm(threading.Thread):
             if abs(distanceLowerWall - distanceUpperWall) < ALREADY_MIDDLE_LINE_EPSILON:
                 # case already on the middle line
                 # ensure good rotation. If already looking in direction of middle line, no rotation is necessary
-                # TODO might result in walking middle line in only one direction
                 # check if we can see the door from here and that it is fairly large -----------------------------------------------------------
                 correctionDirectionA = round(lowerWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
                 correctionDirectionB = round(upperWallIndex + ROTATION_STEPS / 4) % ROTATION_STEPS
@@ -135,6 +130,7 @@ class Algorithm(threading.Thread):
         # set up for scan
         self.robotPartialRotation(START_SCAN_INDEX)
         measurements = self.robotRotationMeasuring(myRotationSteps = ROTATION_AMOUNT)
+        # detect spots where distance suddenly increases considerably and spots where is suddenly decreases considerably
         dropIndexList = []
         increaseIndexList = []
         for i in range(len(measurements)):
@@ -154,7 +150,8 @@ class Algorithm(threading.Thread):
         self.robotPartialRotation(ROTATION_STEPS - ROTATION_AMOUNT + ROTATION_STEPS - START_SCAN_INDEX)
         return False
 
-    # TODO maybe try something more random
+    # move method that is called when nothing else works
+    # return nothing
     def robotMoveRandomly(self, measurements):
         SAFETY_DISTANCE = 250
         MOVING_DISTANCE = 70
@@ -165,6 +162,7 @@ class Algorithm(threading.Thread):
         self.robotMoveForwardAnimated(MOVING_DISTANCE)
 
     # do full and partial rotation and collect sensor measurements
+    # important: scan happens CLOCKWISE
     def robotRotationMeasuring(self, myRotationSteps = ROTATION_STEPS):
         measurements = []
         for i in range(myRotationSteps):
@@ -204,6 +202,9 @@ class Algorithm(threading.Thread):
         self.robot.theta += amount
 
     # make a partial rotation without taking measurements
+    # attention: steps is measured in indices amount relative to steps for a full rotation, not in degree
+    # this method ensures that direction of rotation is that allows for a shorter rotation amount to get to the index
+    # e.g. if the robot shall turn 3/4 of a full rotation, this method makes it turn 1/4 in the non-regular turning direction
     def robotPartialRotation(self, steps):
         # avoid more than one rotation
         steps = steps % ROTATION_STEPS
