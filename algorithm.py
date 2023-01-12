@@ -33,6 +33,8 @@ class Algorithm(threading.Thread):
 
     def run(self):
         self.scannerAlgorithm()
+        # remove comment for manual control algo
+        # self.manualControlAlgorithm()
 
     # our algorithm
     def scannerAlgorithm(self):
