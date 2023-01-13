@@ -6,12 +6,12 @@ import numpy as np
 # doesn't need to know any other component
 class Environment:
 
-    WIDTH = 1800
+    WIDTH = 1300
     HEIGHT = 500
     WALL_SIZE = 20
     # constants of the door. (x, y) is top left corner of emptiness
     DOOR_X = 1000
-    DOOR_Y = 150
+    DOOR_Y = 130
     DOOR_WIDTH = 100
     # table constants
     TABLE_HEIGHT = 80

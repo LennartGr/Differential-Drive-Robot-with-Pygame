@@ -175,7 +175,7 @@ class Algorithm(threading.Thread):
 
     # return the distance of the robot to the next obstacle in the robot's gaze direction
     def getRobotDistToObstacle(self, cutoff = True):
-        CUTOFF_VALUE = 300
+        CUTOFF_VALUE = 600
         realDistance = self.environment.getDistanceToObstacle(self.robot.x, self.robot.y, self.robot.theta)
         if cutoff:
             return min(realDistance, CUTOFF_VALUE)

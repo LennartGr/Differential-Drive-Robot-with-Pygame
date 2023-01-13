@@ -1,0 +1,123 @@
+<?xml version="1.0" standalone="no"?>
+<mlt LC_NUMERIC="C" version="7.13.0" title="Shotcut version 22.12.21" producer="main_bin">
+  <profile description="automatic" width="1300" height="500" progressive="1" sample_aspect_num="1" sample_aspect_den="1" display_aspect_num="13" display_aspect_den="5" frame_rate_num="15" frame_rate_den="1" colorspace="601"/>
+  <playlist id="main_bin">
+    <property name="xml_retain">1</property>
+  </playlist>
+  <producer id="black" in="00:00:00.000" out="00:00:29.067">
+    <property name="length">00:00:29.133</property>
+    <property name="eof">pause</property>
+    <property name="resource">0</property>
+    <property name="aspect_ratio">1</property>
+    <property name="mlt_service">color</property>
+    <property name="mlt_image_format">rgba</property>
+    <property name="set.test_audio">0</property>
+  </producer>
+  <playlist id="background">
+    <entry producer="black" in="00:00:00.000" out="00:00:29.067"/>
+  </playlist>
+  <producer id="producer0" in="00:00:00.000" out="00:00:23.267">
+    <property name="length">00:00:23.333</property>
+    <property name="eof">pause</property>
+    <property name="resource">3:/home/lennart/Videos/SimulationVideo.mp4</property>
+    <property name="aspect_ratio">1</property>
+    <property name="seekable">1</property>
+    <property name="audio_index">-1</property>
+    <property name="video_index">0</property>
+    <property name="mute_on_pause">1</property>
+    <property name="warp_speed">3</property>
+    <property name="warp_resource">/home/lennart/Videos/SimulationVideo.mp4</property>
+    <property name="mlt_service">timewarp</property>
+    <property name="shotcut:producer">avformat</property>
+    <property name="video_delay">0</property>
+    <property name="shotcut:hash">2d512c5b4adaa1e4c334ff93c42bc499</property>
+    <property name="shotcut:caption">SimulationVideo.mp4 (3x)</property>
+    <property name="xml">was here</property>
+    <filter id="filter0" in="00:00:01.267" out="00:00:19.867">
+      <property name="argument">Speed: 4x</property>
+      <property name="geometry">288 -22 404 117 1</property>
+      <property name="family">Sans</property>
+      <property name="size">500</property>
+      <property name="weight">500</property>
+      <property name="style">normal</property>
+      <property name="fgcolour">#ffffffff</property>
+      <property name="bgcolour">#00000000</property>
+      <property name="olcolour">#aa000000</property>
+      <property name="pad">0</property>
+      <property name="halign">center</property>
+      <property name="valign">bottom</property>
+      <property name="outline">3</property>
+      <property name="mlt_service">dynamictext</property>
+      <property name="shotcut:filter">dynamicText</property>
+      <property name="shotcut:usePointSize">0</property>
+      <property name="shotcut:animIn">00:00:00.000</property>
+      <property name="shotcut:animOut">00:00:00.000</property>
+    </filter>
+  </producer>
+  <producer id="producer1" in="00:00:00.000" out="00:02:20.067">
+    <property name="length">00:02:20.133</property>
+    <property name="eof">pause</property>
+    <property name="resource">0.5:/home/lennart/Videos/SimulationVideo.mp4</property>
+    <property name="aspect_ratio">1</property>
+    <property name="seekable">1</property>
+    <property name="audio_index">-1</property>
+    <property name="video_index">0</property>
+    <property name="mute_on_pause">1</property>
+    <property name="warp_speed">0.5</property>
+    <property name="warp_resource">/home/lennart/Videos/SimulationVideo.mp4</property>
+    <property name="mlt_service">timewarp</property>
+    <property name="shotcut:producer">avformat</property>
+    <property name="video_delay">0</property>
+    <property name="shotcut:hash">2d512c5b4adaa1e4c334ff93c42bc499</property>
+    <property name="shotcut:caption">SimulationVideo.mp4 (0.5x)</property>
+    <property name="xml">was here</property>
+    <filter id="filter1" in="00:01:59.333" out="00:02:09.733">
+      <property name="argument">Speed: 0.5x</property>
+      <property name="geometry">288 -22 404 117 1</property>
+      <property name="family">Sans</property>
+      <property name="size">500</property>
+      <property name="weight">500</property>
+      <property name="style">normal</property>
+      <property name="fgcolour">#ffffffff</property>
+      <property name="bgcolour">#00000000</property>
+      <property name="olcolour">#aa000000</property>
+      <property name="pad">0</property>
+      <property name="halign">center</property>
+      <property name="valign">bottom</property>
+      <property name="outline">3</property>
+      <property name="mlt_service">dynamictext</property>
+      <property name="shotcut:filter">dynamicText</property>
+      <property name="shotcut:usePointSize">0</property>
+      <property name="shotcut:animIn">00:00:00.000</property>
+      <property name="shotcut:animOut">00:00:00.000</property>
+    </filter>
+  </producer>
+  <playlist id="playlist0">
+    <property name="shotcut:video">1</property>
+    <property name="shotcut:name">V1</property>
+    <entry producer="producer0" in="00:00:01.267" out="00:00:19.867"/>
+    <entry producer="producer1" in="00:01:59.333" out="00:02:09.733"/>
+  </playlist>
+  <tractor id="tractor0" title="Shotcut version 22.12.21" in="00:00:00.000" out="00:00:29.067">
+    <property name="shotcut">1</property>
+    <property name="shotcut:projectAudioChannels">2</property>
+    <property name="shotcut:projectFolder">0</property>
+    <track producer="background"/>
+    <track producer="playlist0"/>
+    <transition id="transition0">
+      <property name="a_track">0</property>
+      <property name="b_track">1</property>
+      <property name="mlt_service">mix</property>
+      <property name="always_active">1</property>
+      <property name="sum">1</property>
+    </transition>
+    <transition id="transition1">
+      <property name="a_track">0</property>
+      <property name="b_track">1</property>
+      <property name="version">0.1</property>
+      <property name="mlt_service">frei0r.cairoblend</property>
+      <property name="threads">0</property>
+      <property name="disable">1</property>
+    </transition>
+  </tractor>
+</mlt>
